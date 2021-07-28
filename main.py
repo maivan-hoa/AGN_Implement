@@ -72,7 +72,7 @@ netG, img_list_glass, img_list_face, G_lossed, D_losses, num_fooled = train_AGN(
                                                                                 class_names, nz, num_epochs, batch_size)
 
 
-
+torch.save(netG.state_dict(), './model/netG_{}epochs_{}.pth'.format(num_epochs, dt.datetime.today().strftime('%Y%m%d')))
 
 
 
