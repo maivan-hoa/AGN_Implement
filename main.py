@@ -30,8 +30,8 @@ class_names = ['Bien', 'Cuong', 'LeDong', 'Phu', 'Vu', 'Nguyen', 'Hoa']
 nc, ndf, ngf, nz = 3, 160, 160, 100 # nz là chiều dài vector nhiễu đầu vào
 
 # Khởi tạp Generator và Discriminator, Model Face Classification
-netG = Generator(nc=nc, ngf=ngf, nz=nz)
-netD = Discriminator(nc=nc, ndf=ndf)
+netG = Generator(nc=nc, ngf=ngf, nz=nz).to(device)
+netD = Discriminator(nc=nc, ndf=ndf).to(device)
 
 path_model_classification = './model/MobileFaceNet_classification.pth'
 model_clf = get_MobileFaceNet_classification(path_model_classification)
@@ -75,7 +75,13 @@ netG, img_list_glass, img_list_face, G_lossed, D_losses, num_fooled = train_AGN(
 torch.save(netG.state_dict(), './model/netG_{}epochs_{}.pth'.format(num_epochs, dt.datetime.today().strftime('%Y%m%d')))
 
 
-
+for i, grid in enumerate(img_list_glass):
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.show()
+    
+for i, grid in enumerate(img_list_face):
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.show()
 
 
 

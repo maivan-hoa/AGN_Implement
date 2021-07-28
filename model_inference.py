@@ -187,7 +187,7 @@ def get_MobileFaceNet_classification(path):
     
     print()
     print('Get Model Success.........')
-    return model
+    return model.to(device)
     
 
 if __name__ == '__main__':

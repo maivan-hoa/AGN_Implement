@@ -38,7 +38,7 @@ class EyeglassesDataset(Dataset):
         
         sample = (sample - 127.5) / 128 # normalize giá trị về [-1, 1]
         sample = torch.Tensor(sample).permute(2,0,1)
-        return sample
+        return sample.to(device)
         
     
 class MeDataset(Dataset):
@@ -59,7 +59,7 @@ class MeDataset(Dataset):
         
         landmarks = self.label.iloc[idx, 1:]
         
-        return image, torch.Tensor(landmarks) # Yêu cầu kết quả trả về phải là tensor để tạo batch
+        return image.to(device), torch.Tensor(landmarks).to(device) # Yêu cầu kết quả trả về phải là tensor để tạo batch
     
     
     

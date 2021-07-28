@@ -98,7 +98,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             
             # do đầu ra của Generator nằm trong [-1, 1] nên phải normalize về [0, 1]
             fakes = normalize_glass(fake)
-            if i % 50 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
+            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
                 img_glass_list.append(utils.make_grid(fakes.detach(), nrow=8, padding=10)) # 5 CỘT, khoảng cách giữa các hàng/cột là 10
                 
             # cắt chỉ lấy phần có kính
@@ -118,8 +118,8 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
                 x1, x2, y1, y2 = landmarks[j, :-2].int()
                 
                 glass = F.interpolate(fakes, (glassHeight, glassWidth)) # resize theo batch, kích thước truyền vào phải là (B x C x H x W)
-                mask = F.interpolate(torch.Tensor(mask_Glass[None, None,...]), (glassHeight, glassWidth)) # None tự động thêm một chiều tương ứng
-                mask_inv = F.interpolate(torch.Tensor(mask_inv_Glass[None, None,...]), (glassHeight, glassWidth))
+                mask = F.interpolate(torch.Tensor(mask_Glass[None, None,...]), (glassHeight, glassWidth)).to(device) # None tự động thêm một chiều tương ứng
+                mask_inv = F.interpolate(torch.Tensor(mask_inv_Glass[None, None,...]), (glassHeight, glassWidth)).to(device)
             
                 # cắt vùng ảnh cần chứa kính trong khuôn mặt để xử lý
                 roi = face[None, :, y1:y2, x1:x2]
@@ -133,7 +133,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             # Tiền xử lý ảnh khuôn mặt trước khi cho vào model_face
             faces = faces * 255
             
-            if i % 50 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
+            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
                 img_face_list.append(utils.make_grid(faces.detach().int(), nrow=8, padding=10))
                 
             faces = F.interpolate(faces, (112, 112))
@@ -144,6 +144,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
                 outputs = model_face(faces)
                 _, preds = torch.max(outputs, 1)
                 if i % 10 == 0:
+                    print()
                     print('=====================================')
                     print('Check Generator fooled model face...')
                     print('Epoch: {}/{} | step: {}/{}'.format(epoch+1, num_epochs, i, len(dataloader_glass)))
@@ -165,7 +166,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             # Update with F(.)
             label = torch.full((batch_size,), me_label, device=device)
             output2 = model_face(faces)
-            l2 = criterionF(output2, label, targets=None, type='dodging')
+            l2 = criterionF(output2, label, device=device, targets=None, type='dodging')
             l2.backward()
             
             errG = l1 + l2
@@ -178,6 +179,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
                 print()
                 print('Epoch: {}/{}  | step: {}/{}  | loss G: {} | Loss D: {}'.format(
                         epoch+1, num_epochs, i, len(dataloader_glass), errG.item(), errD.item()))
+                print()
             
     return netG, img_list_glass, img_liss_face, G_lossed, D_losses, num_fooled
     

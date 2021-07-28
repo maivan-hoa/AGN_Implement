@@ -98,7 +98,7 @@ class Discriminator(nn.Module):
 
 
 
-def LossF(logits, labels, targets=None, type='dodging'):
+def LossF(logits, labels, device, targets=None, type='dodging'):
     '''
     Parameters
     ----------
@@ -113,7 +113,7 @@ def LossF(logits, labels, targets=None, type='dodging'):
     
     
     if type == 'dodging':
-        label_one_hot = torch.eye(logits.shape[1])[labels.long()]
+        label_one_hot = torch.eye(logits.shape[1], device=device)[labels.long()]
         
         real = torch.sum(logits * label_one_hot, 1)
         other = torch.sum(logits * (1 - label_one_hot), 1)
@@ -121,7 +121,7 @@ def LossF(logits, labels, targets=None, type='dodging'):
         return torch.mean(real - other)
     
     if type == 'impersonate':
-        target_one_hot = torch.eye(logits.shape[1])[targets.long()]
+        target_one_hot = torch.eye(logits.shape[1], device=device)[targets.long()]
         
         target = torch.sum(logits * target_one_hot, 1)
         other = torch.sum(logits * (1 - target_one_hot), 1)
