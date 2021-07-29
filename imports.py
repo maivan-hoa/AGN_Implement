@@ -29,7 +29,7 @@ from tqdm import tqdm
 import datetime as dt
 
 from imutils.video import FPS
-# from openvino.inference_engine import IECore
+from openvino.inference_engine import IECore
 
 
 

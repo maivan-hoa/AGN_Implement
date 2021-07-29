@@ -47,7 +47,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
     img_face_list = []  # là mảng lưu các utils.make_grid                              (giá trị các kính [0, 255])
     G_losses = []
     D_losses = []
-    num_fooled = []
+    num_fooled = 0
     
     print('Starting Training AGN.........')
     for epoch in range(num_epochs):
@@ -98,8 +98,8 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             
             # do đầu ra của Generator nằm trong [-1, 1] nên phải normalize về [0, 1]
             fakes = normalize_glass(fake)
-            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
-                img_glass_list.append(utils.make_grid(fakes.detach(), nrow=8, padding=10)) # 5 CỘT, khoảng cách giữa các hàng/cột là 10
+            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-2):
+                img_glass_list.append(utils.make_grid(fakes.detach(), nrow=8, padding=2)) # 5 CỘT, khoảng cách giữa các hàng/cột là 2
                 
             # cắt chỉ lấy phần có kính
             fakes = fakes[:, :, 39:81, 21:138]
@@ -133,8 +133,8 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             # Tiền xử lý ảnh khuôn mặt trước khi cho vào model_face
             faces = faces * 255
             
-            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-1):
-                img_face_list.append(utils.make_grid(faces.detach().int(), nrow=8, padding=10))
+            if i % 200 == 0 or (epoch == num_epochs-1 and i == len(dataloader_glass)-2):
+                img_face_list.append(utils.make_grid(faces.detach().int(), nrow=8, padding=2))
                 
             faces = F.interpolate(faces, (112, 112))
             faces = (faces - 127.5) / 128
@@ -143,7 +143,7 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             with torch.no_grad():
                 outputs = model_face(faces)
                 _, preds = torch.max(outputs, 1)
-                if i % 10 == 0:
+                if i % 50 == 0:
                     print()
                     print('=====================================')
                     print('Check Generator fooled model face...')
@@ -151,6 +151,11 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
                     print('Num Fooled: {}/{}'.format(torch.sum(preds != me_label).item(), faces.shape[0]))
                     print('Mean prob me: ', outputs[:, me_label].mean().item())
                     print('=====================================')
+                    
+                    if torch.sum(preds != me_label).item() > num_fooled:
+                        num_fooled = torch.sum(preds != me_label).item()
+                        torch.save(netG.state_dict(), './model/netG_backup.pth')
+                        torch.save(netD.state_dict(), './model/netD_backup.pth')
                 
             
             #=================================================================
@@ -175,13 +180,13 @@ def train_AGN(netG, netD, model_face, dataloader_glass, dataloader_me, class_nam
             optimizerG.step()
             
             
-            if i % 10 == 0:
+            if i % 50 == 0:
                 print()
                 print('Epoch: {}/{}  | step: {}/{}  | loss G: {} | Loss D: {}'.format(
                         epoch+1, num_epochs, i, len(dataloader_glass), errG.item(), errD.item()))
                 print()
             
-    return netG, img_list_glass, img_liss_face, G_lossed, D_losses, num_fooled
+    return netG, netD, img_glass_list, img_face_list, G_losses, D_losses
     
     
 if __name__ == '__main__':

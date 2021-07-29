@@ -57,6 +57,7 @@ def predict_class_face(face, model_clf, required_size=(112, 112)):
 
 
 def affix_glass(image, glass_fake, predict_landmark, drect):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # detect landmarks
     shapes = predict_landmark(image, drect)
@@ -92,7 +93,8 @@ def affix_glass(image, glass_fake, predict_landmark, drect):
     roi = np.clip(roi, 0, 1)
     image[y1:y2, x1:x2] = glass + roi 
     
-    return image # (image*255).astype('uint8')
+    image = (image*255).astype('uint8')
+    return cv2.cvtColor(image, cv2.COLOR_RGB2BGR) # (image*255).astype('uint8')
 
 
 def run(netG, model_clf, model_detector, predict_landmark, required_size=(112, 112)):
@@ -100,6 +102,7 @@ def run(netG, model_clf, model_detector, predict_landmark, required_size=(112, 1
     # Kính để test
     glass = io.imread("./data/eyeglasses/glasses000002-2.png")
     glass = cv2.resize(glass, (160, 160), interpolation = cv2.INTER_AREA)
+    plt.imshow(glass)
     glass = glass/255
     # glass = np.transpose(glass, (2, 0, 1))
     glass = glass[39:81, 21:138]

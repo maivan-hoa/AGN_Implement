@@ -217,7 +217,7 @@ if __name__ == '__main__':
     
     face = cv2.resize(face, (112, 112))
     face = face.transpose((2, 0, 1))
-    face = torch.tensor(face)
+    face = torch.Tensor(face)
     face = (face - 127.5) / 128
     
     model = get_MobileFaceNet_classification(path)
